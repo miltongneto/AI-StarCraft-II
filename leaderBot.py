@@ -6,49 +6,72 @@ from sc2.constants import *
 from sc2.player import Bot
 from sc2.units import Unit
 
+
+from builderBot import BuilderAgent
+from fighterBot import FighterAgent
+from collectorBot import CollectorAgent
+from sc2.player import Bot
+
 class LeaderBot(sc2.BotAI):
+    messagesQueue = []
+
     async def on_step(self, iteration):
         if iteration == 0:
             print("First action")
+            self.agents = [('Builder', BuilderAgent(self)), ('Collector', CollectorAgent(self))]
         else:
             if self.units(NEXUS).exists:
                 nexus = self.units(NEXUS).first
+                
                 await self.trainProbe(nexus)
-                await self.buildSothingIfNotExist(PYLON, nexus)
-                
-                if self.units(PYLON).exists:
-                    pylon = self.units(PYLON).first
-                    await self.buildSothingIfNotExist(GATEWAY, pylon)
-                    await self.buildAssimilator(nexus)
-                
-                if (self.units(PYLON).exists & self.units(GATEWAY).exists):
-                    await self.buildSothingIfNotExist(CYBERNETICSCORE, pylon)
 
-                if self.units(PROBE).idle.exists:
-                    for proble in self.units(PROBE).idle:
-                        mineral_closest = self.state.mineral_field.closest_to(proble)
-                        proble.gather(mineral_closest)
+                if (self.units(GATEWAY).ready.exists):
+                    await self.createArmy(self.units(GATEWAY).first)
+
+                if (self.units(ZEALOT).amount >= 15):
+                    await self.getAgent('Fighter').attack()
+
+                if (self.units(GATEWAY).amount >= 2 and self.units(GATEWAY)[1].is_ready):
+                    await self.createArmy(self.units(GATEWAY)[1])
+                
+                for (_,agent) in self.agents:
+                    await agent.on_step(iteration)
+                
             else:
                 print("Without nexus")       
 
 
     async def trainProbe(self, nexus):
+        if not self.can_afford(PROBE):
+            return
         if self.workers.amount < 16 and nexus.noqueue:
-            if self.can_afford(PROBE):
-                print("Training PROBE")
-                await self.do(nexus.train(PROBE))
+            print("Training PROBE")
+            await self.do(nexus.train(PROBE))
+        elif self.units(PYLON).amount >= 2 and self.units(PROBE).amount < 22 and nexus.noqueue:
+            print("Training PROBE")
+            await self.do(nexus.train(PROBE))
+            
 
+    async def createArmy(self, gateway):
+        if self.units(ZEALOT).amount < 5 and gateway.noqueue:
+            if self.can_afford(ZEALOT):
+                await self.do(gateway.train(ZEALOT)) 
+        elif self.units(SENTRY).amount < 4 and gateway.noqueue:
+            if self.can_afford(SENTRY):
+                await self.do(gateway.train(SENTRY))
+        elif self.units(STALKER).amount < 6 and gateway.noqueue:
+            if self.can_afford(STALKER):
+                await self.do(gateway.train(STALKER))
+        
+        agent = self.getAgent('Fighter')
+        if agent == None:
+            self.agents.append(('Fighter', FighterAgent(self)))
+            
 
-    async def buildAssimilator(self, nexus):
-        if not self.units(ASSIMILATOR).exists and not self.already_pending(ASSIMILATOR):
-            if self.can_afford(ASSIMILATOR):
-                vespeno_gas = self.state.vespene_geyser.closest_to(nexus)
-                proble = self.units(PROBE).closest_to(vespeno_gas)
-                print("Build ASSIMILATOR")
-                await self.do(proble.build(ASSIMILATOR, vespeno_gas))
-
-    async def buildSothingIfNotExist(self, building, pos):
-        if not self.units(building).exists and not self.already_pending(building):
-            if self.can_afford(building):
-                print("Build ", building)
-                await self.build(building, near=pos)
+    def getAgent(self, key):
+        for (k, v) in self.agents:
+            if key == k:
+                return v
+        return None
+        #agent = filter(lambda k,v: k == key, self.agents)
+        #return agent
