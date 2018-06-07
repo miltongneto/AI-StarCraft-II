@@ -43,7 +43,7 @@ class BuilderAgent(object):
 
     async def createSimpleUnits(self, nexus):
         await self.buildSothingIfNotExist(PYLON, nexus)
-        
+                        
         if self.bot.units(PYLON).exists:
             pylon = self.bot.units(PYLON).first
             
@@ -58,14 +58,25 @@ class BuilderAgent(object):
         if not self.bot.units(PHOTONCANNON).exists and self.bot.can_afford(PHOTONCANNON):
             pylon = self.bot.units(PYLON).closest_to(self.bot.enemy_start_locations[0])
             await self.bot.build(PHOTONCANNON, pylon)
+
+    async def buildPylon(self, nexus):
+        if self.bot.supply_left < 2 and not self.bot.already_pending(PYLON) and self.bot.can_afford(PYLON):
+            await self.bot.build(PYLON, nexus)
     
     async def expandBase(self, nexus):    
-        await self.buildSothing(PYLON, nexus, 2)
+        await self.buildSothing(PYLON, nexus, 4)
         await self.buildSothing(FORGE, nexus, 1)
         await self.buildPhotonCannon(nexus)
+
+        await self.buildPylon(nexus)
 
         if self.bot.units(PYLON).amount >= 2:
             pylon = self.bot.units(PYLON)[1]
             await self.buildSothing(GATEWAY, pylon, 2)
+
+        if self.bot.units(CYBERNETICSCORE).ready.exists:
+            cyberneticscore = self.bot.units(CYBERNETICSCORE)[0]
+            await self.buildSothingIfNotExist(ROBOTICSFACILITY, cyberneticscore)
+    
         
         

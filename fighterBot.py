@@ -12,6 +12,19 @@ class FighterAgent(object):
             print("first action of Fighter Agent")
 
     async def attack(self):
-        fighters = self.coordinator.units(ZEALOT).ready
+        fighters = self.getFighters()
         for fighter in fighters:
             await self.coordinator.do(fighter.attack(self.coordinator.enemy_start_locations[0]))
+
+    def addUnits(self, units, unitsAux):
+        for unit in unitsAux:
+            units.append(unit)
+            return units
+
+    def getFighters(self):
+        units = []
+        self.addUnits(units, self.coordinator.units(ZEALOT))
+        self.addUnits(units, self.coordinator.units(SENTRY))
+        self.addUnits(units, self.coordinator.units(STALKER))
+        self.addUnits(units, self.coordinator.units(IMMORTAL))
+        return units

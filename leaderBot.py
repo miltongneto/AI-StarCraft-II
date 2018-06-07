@@ -28,12 +28,17 @@ class LeaderBot(sc2.BotAI):
                 if (self.units(GATEWAY).ready.exists):
                     await self.createArmy(self.units(GATEWAY).first)
 
-                if (self.units(ZEALOT).amount >= 15):
+                if (self.supply_used - self.workers.amount >= 20):
                     await self.getAgent('Fighter').attack()
 
-                if (self.units(GATEWAY).amount >= 2 and self.units(GATEWAY)[1].is_ready):
-                    await self.createArmy(self.units(GATEWAY)[1])
+                if (self.units(ROBOTICSFACILITY).ready.exists and self.units(ZEALOT).amount < 3):
+                    roboticsfacility = self.units(ROBOTICSFACILITY)[0]
+                    if self.can_afford(IMMORTAL) and roboticsfacility.noqueue:
+                        await self.do(roboticsfacility.train(IMMORTAL)) 
                 
+                if (self.units(GATEWAY).amount >= 2 and self.units(GATEWAY)[1].is_ready):
+                    await self.createArmy(self.units(GATEWAY)[1])                
+
                 for (_,agent) in self.agents:
                     await agent.on_step(iteration)
                 
@@ -62,7 +67,7 @@ class LeaderBot(sc2.BotAI):
         elif self.units(STALKER).amount < 6 and gateway.noqueue:
             if self.can_afford(STALKER):
                 await self.do(gateway.train(STALKER))
-        
+                                
         agent = self.getAgent('Fighter')
         if agent == None:
             self.agents.append(('Fighter', FighterAgent(self)))
