@@ -19,7 +19,7 @@ class FighterAgent(object):
     def addUnits(self, units, unitsAux):
         for unit in unitsAux:
             units.append(unit)
-            return units
+        return units
 
     def getFighters(self):
         units = []

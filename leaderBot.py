@@ -25,20 +25,23 @@ class LeaderBot(sc2.BotAI):
                 
                 await self.trainProbe(nexus)
 
-                if (self.units(GATEWAY).ready.exists):
-                    await self.createArmy(self.units(GATEWAY).first)
+                
+                if (self.supply_used > 10):
+                    await self.getAgent('Builder').newNexusAndBase()
 
-                if (self.supply_used - self.workers.amount >= 20):
+
+                if (self.units(GATEWAY).ready.exists):
+                    for gateway in self.units(GATEWAY).ready:
+                        await self.createArmy(gateway)
+
+                if (self.supply_used > 32 and len(self.getAgent('Fighter').getFighters()) >= 15):
                     await self.getAgent('Fighter').attack()
 
-                if (self.units(ROBOTICSFACILITY).ready.exists and self.units(ZEALOT).amount < 3):
+                if (self.units(ROBOTICSFACILITY).ready.exists and self.units(IMMORTAL).amount < 3):
                     roboticsfacility = self.units(ROBOTICSFACILITY)[0]
                     if self.can_afford(IMMORTAL) and roboticsfacility.noqueue:
                         await self.do(roboticsfacility.train(IMMORTAL)) 
                 
-                if (self.units(GATEWAY).amount >= 2 and self.units(GATEWAY)[1].is_ready):
-                    await self.createArmy(self.units(GATEWAY)[1])                
-
                 for (_,agent) in self.agents:
                     await agent.on_step(iteration)
                 
@@ -78,5 +81,3 @@ class LeaderBot(sc2.BotAI):
             if key == k:
                 return v
         return None
-        #agent = filter(lambda k,v: k == key, self.agents)
-        #return agent

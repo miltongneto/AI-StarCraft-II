@@ -1,7 +1,7 @@
 import random
 import sc2
 from sc2.constants import *
-from sc2.units import Unit
+from sc2.units import Unit, Units
 
 class BuilderAgent(object):
     
@@ -77,6 +77,29 @@ class BuilderAgent(object):
         if self.bot.units(CYBERNETICSCORE).ready.exists:
             cyberneticscore = self.bot.units(CYBERNETICSCORE)[0]
             await self.buildSothingIfNotExist(ROBOTICSFACILITY, cyberneticscore)
+
+
+    async def newNexusAndBase(self):
+        if self.bot.units(NEXUS).amount < 2 and not self.bot.already_pending(NEXUS) and self.bot.can_afford(NEXUS):
+            nexus = self.bot.units(NEXUS).first
+            worker = self.bot.workers[0]
+            minerals_next_nexus = self.bot.state.mineral_field.closer_than(15, nexus)
+            minerals = self.bot.state.mineral_field
+            minerals = Units(self.removeMinerals(minerals_next_nexus, minerals), self.bot._game_data)
+            mineral_field = minerals.closest_to(nexus)
+            
+            if not self.bot.units(PYLON).closer_than(20.0, mineral_field).exists and not self.bot.already_pending(PYLON):
+                print("Build ", PYLON)
+                await self.bot.build(PYLON, mineral_field, max_distance=10, unit=worker)
+            
+            if self.bot.can_afford(NEXUS):
+                print("Build ", NEXUS)
+                await self.bot.build(NEXUS, mineral_field, max_distance=10, unit=worker)
+        elif self.bot.units(NEXUS).ready.amount > 1:
+            await self.createSimpleUnits(self.bot.units(NEXUS)[1])
+
+    def removeMinerals(self, minerals_next_nexus, minerals):
+        return [mineral for mineral in minerals if mineral not in minerals_next_nexus]
     
         
         
