@@ -10,6 +10,7 @@ from sc2.units import Unit
 from builderBot import BuilderAgent
 from fighterBot import FighterAgent
 from collectorBot import CollectorAgent
+from scouterBot import ScouterBot
 from sc2.player import Bot
 
 class LeaderBot(sc2.BotAI):
@@ -25,9 +26,13 @@ class LeaderBot(sc2.BotAI):
                 
                 await self.trainProbe(nexus)
 
+                scouters = self.getAgent('Scouter')
+                if scouters == None:
+                    self.agents.append(('Scouter', ScouterBot(self)))
                 
                 if (self.supply_used > 10):
                     await self.getAgent('Builder').newNexusAndBase()
+                    await self.getAgent('Scouter').scouting()
 
 
                 if (self.units(GATEWAY).ready.exists):
