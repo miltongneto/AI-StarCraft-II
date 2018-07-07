@@ -32,7 +32,7 @@ class LeaderBot(sc2.BotAI):
                 
                 if (self.supply_used > 10):
                     await self.getAgent('Builder').newNexusAndBase()
-                    await self.getAgent('Scouter').scouting(2)
+                    await self.getAgent('Scouter').scouting()
 
 
                 if (self.units(GATEWAY).ready.exists):

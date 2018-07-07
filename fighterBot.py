@@ -1,6 +1,8 @@
 import sc2
 from sc2.constants import *
 from sc2.units import Unit
+from random import randint
+import math
 
 class FighterAgent(object):
     
@@ -13,8 +15,14 @@ class FighterAgent(object):
 
     async def attack(self):
         fighters = self.getFighters()
-        for fighter in fighters:
-            await self.coordinator.do(fighter.attack(self.coordinator.enemy_start_locations[0]))
+        aux_metade = math.ceil(len(fighters)/2)
+        for fighter in range(aux_metade):
+            await self.coordinator.do(fighters[fighter].attack(self.coordinator.enemy_start_locations[0]))
+        if len(self.coordinator.known_enemy_structures) > 0:
+            for fighter in range(aux_metade,len(fighters)-1):
+                estrut_aleatoria = randint(0,len(self.coordinator.known_enemy_structures)-1)
+                print("Atacando estrutura aleatória")
+                await self.coordinator.do(fighters[fighter].attack(self.coordinator.known_enemy_structures[estrut_aleatoria]))
 
     def addUnits(self, units, unitsAux):
         for unit in unitsAux:

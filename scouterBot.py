@@ -2,9 +2,11 @@ import sc2
 from sc2.constants import *
 from sc2.units import Unit, Units
 from random import randint
+import math
+import configCounterScout
 
 class ScouterBot(object):
-    global counter = 0
+    configCounterScout.counter = 0
 
     def __init__(self, coordinator):
         self.coordinator = coordinator
@@ -13,12 +15,12 @@ class ScouterBot(object):
         if(iteration != 0):
             await self.scouting()
 
-    async def scouting(self,qtd):
+    async def scouting(self):
         if self.coordinator.units(PROBE).idle.exists:
-            for probe in self.coordinator.units(PROBE).idle:
-                if counter <= qtd:
-                    #for possible_enemy_base in self.coordinator.enemy_start_locations:
-                    possivel_base_aleatoria_indice = randint(0,len(self.coordinator.enemy_start_locations)-1)
-                    counter = counter+1
-                    print("Scouting na localizacao",possivel_base_aleatoria_indice) 
-                    await self.coordinator.do(probe.move(self.coordinator.enemy_start_locations[possivel_base_aleatoria_indice]))
+            arry_aux = self.coordinator.units(PROBE).idle
+            for probe in range(math.ceil(len(arry_aux)/2)):
+                #ver se consigo passar qtd por parametro depois   
+                if configCounterScout.counter == 0:
+                    configCounterScout.counter += 1 
+                    print("Scouting na localizacao inicial") 
+                    await self.coordinator.do(arry_aux[probe].move(self.coordinator.enemy_start_locations[0]))
