@@ -21,7 +21,7 @@ class FighterAgent(object):
         if len(self.coordinator.known_enemy_structures) > 0:
             for fighter in range(aux_metade,len(fighters)-1):
                 estrut_aleatoria = randint(0,len(self.coordinator.known_enemy_structures)-1)
-                print("Atacando estrutura aleatória")
+                #print("Atacando estrutura aleatória")
                 await self.coordinator.do(fighters[fighter].attack(self.coordinator.known_enemy_structures[estrut_aleatoria]))
 
     def addUnits(self, units, unitsAux):

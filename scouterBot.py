@@ -6,21 +6,35 @@ import math
 import configCounterScout
 
 class ScouterBot(object):
-    configCounterScout.counter = 0
 
     def __init__(self, coordinator):
         self.coordinator = coordinator
     
     async def on_step(self, iteration):
-        if(iteration != 0):
+        if iteration != 0:
             await self.scouting()
+            await self.scoutObserver()
 
     async def scouting(self):
         if self.coordinator.units(PROBE).idle.exists:
-            arry_aux = self.coordinator.units(PROBE).idle
-            for probe in range(math.ceil(len(arry_aux)/2)):
-                #ver se consigo passar qtd por parametro depois   
-                if configCounterScout.counter == 0:
-                    configCounterScout.counter += 1 
-                    print("Scouting na localizacao inicial") 
-                    await self.coordinator.do(arry_aux[probe].move(self.coordinator.enemy_start_locations[0]))
+            #arry_aux = self.coordinator.units(PROBE).idle.take(3, False)
+            #for probe in arry_aux:
+                #ver se consigo passar qtd por parametro depois
+                #async with configCounterScout.locker:   
+            random_scouter = self.coordinator.units(PROBE).idle.random 
+            if configCounterScout.counter == 0:
+                configCounterScout.counter = configCounterScout.counter+1 
+                print("Scouting na localizacao inicial")
+                await self.coordinator.do(random_scouter.move(self.coordinator.enemy_start_locations[0]))
+            elif configCounterScout.counter < 3:
+                if self.coordinator.known_enemy_structures.amount > 0:
+                    print("Scouting em algum campo de minério...", configCounterScout.counter)
+                    rand = randint(0,self.coordinator.state.mineral_field.amount-1)
+                    configCounterScout.counter = configCounterScout.counter+1 
+                    await self.coordinator.do(random_scouter.move(self.coordinator.state.mineral_field[rand].position))
+    
+    async def scoutObserver(self):
+        if self.coordinator.units(OBSERVER).idle.exists:
+           observador = self.coordinator.units(OBSERVER).idle.random
+           print("Scouting de observador!")
+           await self.coordinator.do(observador.move(self.coordinator.state.mineral_field.random.position)) 
