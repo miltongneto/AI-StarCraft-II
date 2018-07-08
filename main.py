@@ -8,9 +8,9 @@ from sc2.player import Bot, Computer
 
 
 def main():
-    sc2.run_game(sc2.maps.get("Abyssal Reef LE"), [
+    sc2.run_game(sc2.maps.get("Blackpink LE"), [
         Bot(Race.Protoss, LeaderBot()),
-        Computer(Race.Protoss, Difficulty.Easy)
+        Computer(Race.Terran, Difficulty.Medium)
     ], realtime=False)
 
 if __name__ == '__main__':

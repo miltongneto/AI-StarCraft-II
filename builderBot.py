@@ -52,7 +52,7 @@ class BuilderAgent(object):
         
         if (self.bot.units(PYLON).exists and self.bot.units(GATEWAY).ready.exists):
             await self.buildSothingIfNotExist(CYBERNETICSCORE, pylon)
-            self.phase = 2;
+            self.phase = 2
 
     async def buildPhotonCannon(self, nexus):
         if not self.bot.units(PHOTONCANNON).exists and self.bot.can_afford(PHOTONCANNON):
@@ -77,7 +77,7 @@ class BuilderAgent(object):
         if self.bot.units(CYBERNETICSCORE).ready.exists:
             cyberneticscore = self.bot.units(CYBERNETICSCORE)[0]
             await self.buildSothingIfNotExist(ROBOTICSFACILITY, cyberneticscore)
-
+            await self.buildSothingIfNotExist(STARGATE,cyberneticscore)
 
     async def newNexusAndBase(self):
         if self.bot.units(NEXUS).amount < 2 and not self.bot.already_pending(NEXUS) and self.bot.can_afford(NEXUS):

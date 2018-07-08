@@ -34,11 +34,6 @@ class LeaderBot(sc2.BotAI):
                 if (self.supply_used > 10):
                     await self.getAgent('Builder').newNexusAndBase()
 
-                #if nexus.health < 500: #se estiver sendo atacado
-                    #botar os probes para atacarem os inimigos/defender a base
-                #    for probe in self.units(PROBE):
-                #        await self.do(probe.attack(self.known_enemy_units.closest_to(nexus)))
-
                 if (self.units(GATEWAY).ready.exists):
                     for gateway in self.units(GATEWAY).ready:
                         await self.createArmy(gateway)
@@ -60,12 +55,25 @@ class LeaderBot(sc2.BotAI):
                 if self.units(FORGE).ready.exists:
                     forge = self.units(FORGE).first
                     abilities = await self.get_available_abilities(forge)
-                    if AbilityId.FORGERESEARCH_PROTOSSGROUNDWEAPONSLEVEL1 in abilities: #and AbilityId.FORGERESEARCH_PROTOSSGROUNDARMORLEVEL1 in abilities:
+                    if AbilityId.FORGERESEARCH_PROTOSSGROUNDWEAPONSLEVEL1 in abilities and self.can_afford(AbilityId.FORGERESEARCH_PROTOSSGROUNDWEAPONSLEVEL1): #and AbilityId.FORGERESEARCH_PROTOSSGROUNDARMORLEVEL1 in abilities:
                         print("Melhoramento em armas de unidades térreas")
                         await self.do(forge(AbilityId.FORGERESEARCH_PROTOSSGROUNDWEAPONSLEVEL1)) #aprimorar armamento
-                
+                    if AbilityId.FORGERESEARCH_PROTOSSSHIELDSLEVEL1 in abilities and self.can_afford(AbilityId.FORGERESEARCH_PROTOSSSHIELDSLEVEL1):
+                        print("Melhoramento de escudos em unidades térreas")
+                        await self.do(forge(AbilityId.FORGERESEARCH_PROTOSSSHIELDSLEVEL1))
+
                 if(self.units(OBSERVER).exists):
-                    await self.getAgent("Scouter").scoutObserver()
+                    await self.getAgent("Scouter").scoutObserver()#scout com observadores
+
+                if self.units(CYBERNETICSCORE).ready.exists: #melhoria em armas e armaduras de unidades aéreas
+                    cybercore = self.units(CYBERNETICSCORE).first
+                    abilities = await self.get_available_abilities(cybercore)
+                    if AbilityId.CYBERNETICSCORERESEARCH_PROTOSSAIRWEAPONSLEVEL1 in abilities and self.can_afford(AbilityId.CYBERNETICSCORERESEARCH_PROTOSSAIRWEAPONSLEVEL1):
+                        print("Melhoramento em armas de unidades aéreas")
+                        await self.do(cybercore(AbilityId.CYBERNETICSCORERESEARCH_PROTOSSAIRWEAPONSLEVEL1))
+                    if AbilityId.CYBERNETICSCORERESEARCH_PROTOSSAIRARMORLEVEL1 in abilities and self.can_afford(AbilityId.CYBERNETICSCORERESEARCH_PROTOSSAIRARMORLEVEL1):
+                        print("Melhoramento em armadura de unidades aéreas")
+                        await self.do(cybercore(AbilityId.CYBERNETICSCORERESEARCH_PROTOSSAIRARMORLEVEL1))
 
                 for (_,agent) in self.agents:
                     await agent.on_step(iteration)
@@ -95,6 +103,11 @@ class LeaderBot(sc2.BotAI):
         elif self.units(STALKER).amount < 6 and len(gateway.orders)<2:
             if self.can_afford(STALKER):
                 await self.do(gateway.train(STALKER))
+        #usando stargate para unidades aéreas
+        if self.units(STARGATE).amount > 0:
+            stargate = self.units(STARGATE).first
+            if self.can_afford(VOIDRAY) and self.units(VOIDRAY).amount < 3:
+                await self.do(stargate.train(VOIDRAY))
                                 
         agent = self.getAgent('Fighter')
         if agent == None:

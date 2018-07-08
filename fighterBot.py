@@ -41,4 +41,5 @@ class FighterAgent(object):
         self.addUnits(units, self.coordinator.units(SENTRY))
         self.addUnits(units, self.coordinator.units(STALKER))
         self.addUnits(units, self.coordinator.units(IMMORTAL))
+        self.addUnits(units, self.coordinator.units(VOIDRAY))
         return units
