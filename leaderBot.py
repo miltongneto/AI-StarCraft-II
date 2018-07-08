@@ -34,21 +34,28 @@ class LeaderBot(sc2.BotAI):
                 if (self.supply_used > 10):
                     await self.getAgent('Builder').newNexusAndBase()
 
+                #if nexus.health < 500: #se estiver sendo atacado
+                    #botar os probes para atacarem os inimigos/defender a base
+                #    for probe in self.units(PROBE):
+                #        await self.do(probe.attack(self.known_enemy_units.closest_to(nexus)))
 
                 if (self.units(GATEWAY).ready.exists):
                     for gateway in self.units(GATEWAY).ready:
                         await self.createArmy(gateway)
                     await self.getAgent('Scouter').scouting()    
 
-                if (self.supply_used > 32 and len(self.getAgent('Fighter').getFighters()) >= 15):
+                if (self.supply_used > 32 and len(self.getAgent('Fighter').getFighters()) >= 12):
                     await self.getAgent('Fighter').attack()
 
                 if (self.units(ROBOTICSFACILITY).ready.exists and self.units(IMMORTAL).amount < 3):
                     roboticsfacility = self.units(ROBOTICSFACILITY)[0]
                     if self.can_afford(IMMORTAL) and roboticsfacility.noqueue:
                         await self.do(roboticsfacility.train(IMMORTAL))
-                    if self.can_afford(OBSERVER) and len(roboticsfacility.orders) < 2 and self.units(OBSERVER).amount == 0:
-                        await self.do(roboticsfacility.train(OBSERVER))
+                    
+                if self.units(ROBOTICSFACILITY).ready.exists and self.units(OBSERVER).amount == 0:
+                    robotfac = self.units(ROBOTICSFACILITY).first
+                    if self.can_afford(OBSERVER) and len(robotfac.orders) < 3:
+                        await self.do(robotfac.train(OBSERVER))
 
                 if self.units(FORGE).ready.exists:
                     forge = self.units(FORGE).first
@@ -79,13 +86,13 @@ class LeaderBot(sc2.BotAI):
             
 
     async def createArmy(self, gateway):
-        if self.units(ZEALOT).amount < 5 and gateway.noqueue:
+        if self.units(ZEALOT).amount < 5 and len(gateway.orders)<2:
             if self.can_afford(ZEALOT):
                 await self.do(gateway.train(ZEALOT)) 
-        elif self.units(SENTRY).amount < 4 and gateway.noqueue:
+        elif self.units(SENTRY).amount < 4 and len(gateway.orders)<2 and self.units(ROBOTICSFACILITY).exists:
             if self.can_afford(SENTRY):
                 await self.do(gateway.train(SENTRY))
-        elif self.units(STALKER).amount < 6 and gateway.noqueue:
+        elif self.units(STALKER).amount < 6 and len(gateway.orders)<2:
             if self.can_afford(STALKER):
                 await self.do(gateway.train(STALKER))
                                 

@@ -15,17 +15,20 @@ class FighterAgent(object):
 
     async def attack(self):
         fighters = self.getFighters()
-        aux_metade = math.ceil(len(fighters)/2)
-        if len(self.coordinator.known_enemy_structures) > 0:
-            for fighter in range(aux_metade):
-                await self.coordinator.do(fighters[fighter].attack(self.coordinator.enemy_start_locations[0]))
-            for fighter in range(aux_metade,len(fighters)-1):
-                estrut_aleatoria = randint(0,len(self.coordinator.known_enemy_structures)-1)
+        for fighter in fighters:
+            if fighter.is_idle and self.coordinator.known_enemy_structures.exists:
+                await self.coordinator.do(fighter.attack(self.coordinator.known_enemy_structures.random))
+        #aux_metade = math.ceil(len(fighters)/2)
+        #if len(self.coordinator.known_enemy_structures) > 0:
+        #    for fighter in range(aux_metade):
+        #        await self.coordinator.do(fighters[fighter].attack(self.coordinator.enemy_start_locations[0]))
+        #    for fighter in range(aux_metade,len(fighters)-1):
+        #        estrut_aleatoria = randint(0,len(self.coordinator.known_enemy_structures)-1)
                 #print("Atacando estrutura aleatória")
-                await self.coordinator.do(fighters[fighter].attack(self.coordinator.known_enemy_structures[estrut_aleatoria]))
-        else:
-            for fighter in fighters:
-                await self.coordinator.do(fighter.attack(self.coordinator.enemy_start_locations[0]))
+        #        await self.coordinator.do(fighters[fighter].attack(self.coordinator.known_enemy_structures[estrut_aleatoria]))
+        #else:
+        #    for fighter in fighters:
+        #        await self.coordinator.do(fighter.attack(self.coordinator.enemy_start_locations[0]))
 
     def addUnits(self, units, unitsAux):
         for unit in unitsAux:
