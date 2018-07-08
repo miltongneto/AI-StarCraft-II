@@ -5,7 +5,8 @@ from sc2 import Race
 from sc2.constants import *
 from sc2.player import Bot
 from sc2.units import Unit
-
+from sc2.ids.upgrade_id import UpgradeId
+from sc2.ids.ability_id import AbilityId
 
 from builderBot import BuilderAgent
 from fighterBot import FighterAgent
@@ -48,6 +49,13 @@ class LeaderBot(sc2.BotAI):
                         await self.do(roboticsfacility.train(IMMORTAL))
                     if self.can_afford(OBSERVER) and len(roboticsfacility.orders) < 2 and self.units(OBSERVER).amount == 0:
                         await self.do(roboticsfacility.train(OBSERVER))
+
+                if self.units(FORGE).ready.exists:
+                    forge = self.units(FORGE).first
+                    abilities = await self.get_available_abilities(forge)
+                    if AbilityId.FORGERESEARCH_PROTOSSGROUNDWEAPONSLEVEL1 in abilities: #and AbilityId.FORGERESEARCH_PROTOSSGROUNDARMORLEVEL1 in abilities:
+                        print("Melhoramento em armas de unidades térreas")
+                        await self.do(forge(AbilityId.FORGERESEARCH_PROTOSSGROUNDWEAPONSLEVEL1)) #aprimorar armamento
                 
                 if(self.units(OBSERVER).exists):
                     await self.getAgent("Scouter").scoutObserver()
