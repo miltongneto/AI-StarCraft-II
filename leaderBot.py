@@ -39,6 +39,9 @@ class LeaderBot(sc2.BotAI):
                         await self.createArmy(gateway)
                     await self.getAgent('Scouter').scouting()    
 
+               # if nexus.shield < 800:
+                #    await self.getAgent('Fighter').defendBase(nexus)
+
                 if (self.supply_used > 32 and len(self.getAgent('Fighter').getFighters()) >= 12):
                     await self.getAgent('Fighter').attack()
 
@@ -100,7 +103,7 @@ class LeaderBot(sc2.BotAI):
         elif self.units(SENTRY).amount < 4 and len(gateway.orders)<2 and self.units(ROBOTICSFACILITY).exists:
             if self.can_afford(SENTRY):
                 await self.do(gateway.train(SENTRY))
-        elif self.units(STALKER).amount < 6 and len(gateway.orders)<2:
+        elif self.units(STALKER).amount < 6 and len(gateway.orders)<2 and self.units(CYBERNETICSCORE).exists:
             if self.can_afford(STALKER):
                 await self.do(gateway.train(STALKER))
         #usando stargate para unidades aéreas
