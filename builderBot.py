@@ -81,7 +81,7 @@ class BuilderAgent(object):
             await self.bot.build(PYLON, nexus)
     
     async def expandBase(self, nexus):    
-        await self.build_structure(PYLON, nexus, 4)
+        await self.build_structure(PYLON, nexus, 6)
         await self.build_structure(FORGE, nexus, 1)
         await self.buildPhotonCannon(nexus)
 
@@ -94,7 +94,7 @@ class BuilderAgent(object):
         if self.bot.units(CYBERNETICSCORE).ready.exists:
             cyberneticscore = self.bot.units(CYBERNETICSCORE)[0]
             await self.buildIfNotExist(ROBOTICSFACILITY, cyberneticscore)
-
+            await self.buildIfNotExist(STARGATE,cyberneticscore)
 
     async def newNexusAndBase(self):
         if self.bot.units(NEXUS).amount < 2 and not self.bot.already_pending(NEXUS) and self.bot.can_afford(NEXUS):

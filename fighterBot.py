@@ -1,6 +1,7 @@
 import sc2
 from sc2.constants import *
 from sc2.units import Unit
+from sc2.ids.unit_typeid import UnitTypeId
 from random import randint
 from priorityConstants import Priority
 import math
@@ -22,14 +23,23 @@ class FighterAgent(object):
     async def attack(self):
         self.attacking = True
         fighters = self.getFighters()
-        aux_metade = math.ceil(len(fighters)/2)
-        for fighter in range(aux_metade):
-            await self.coordinator.do(fighters[fighter].attack(self.coordinator.enemy_start_locations[0]))
-        if len(self.coordinator.known_enemy_structures) > 0:
-            for fighter in range(aux_metade,len(fighters)-1):
-                estrut_aleatoria = randint(0,len(self.coordinator.known_enemy_structures)-1)
-                print("Atacando estrutura aleatória")
-                await self.coordinator.do(fighters[fighter].attack(self.coordinator.known_enemy_structures[estrut_aleatoria]))
+        for fighter in fighters:
+            if fighter.is_idle and self.coordinator.known_enemy_structures.exists:
+                await self.coordinator.do(fighter.attack(self.coordinator.known_enemy_structures.random))
+                abilities = await self.coordinator.get_available_abilities(fighter)
+                if fighter.type_id == UnitTypeId.SENTRY:
+                    if AbilityId.GUARDIANSHIELD_GUARDIANSHIELD in abilities:
+                        await self.coordinator.do(fighter(AbilityId.GUARDIANSHIELD_GUARDIANSHIELD))
+                elif fighter.type_id == UnitTypeId.VOIDRAY:
+                    if AbilityId.EFFECT_VOIDRAYPRISMATICALIGNMENT in abilities:
+                        await self.coordinator.do(fighter(AbilityId.EFFECT_VOIDRAYPRISMATICALIGNMENT))
+
+    async def defendBase(self, nexus):
+        fighters = self.getFighters()
+        for fighter in fighters:
+            await self.coordinator.do(fighter.move(nexus.position))
+            if self.coordinator.known_enemy_units.closest_to(nexus):    
+                await self.coordinator.do(fighter.attack(self.coordinator.known_enemy_units.closest_to(nexus)))
 
     def addUnits(self, units, unitsAux):
         for unit in unitsAux:
@@ -42,6 +52,7 @@ class FighterAgent(object):
         self.addUnits(units, self.coordinator.units(SENTRY))
         self.addUnits(units, self.coordinator.units(STALKER))
         self.addUnits(units, self.coordinator.units(IMMORTAL))
+        self.addUnits(units, self.coordinator.units(VOIDRAY))
         return units
 
     async def defend(self, nexus, enemies):
