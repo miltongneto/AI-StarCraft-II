@@ -35,9 +35,9 @@ class LeaderBot(sc2.BotAI):
                 if (self.units(GATEWAY).ready.exists):
                     for gateway in self.units(GATEWAY).ready:
                         await self.createArmy(gateway)
-                    await self.getAgent('Scouter').scouting()    
+                    await self.agents['Scouter'].scouting()    
 
-                if (len(self.agents['Fighter'].getFighters()) >= 25):
+                if (len(self.agents['Fighter'].getFighters()) >= 10):
                     await self.agents['Fighter'].attack()
 
                 if (self.units(ROBOTICSFACILITY).ready.exists and self.units(IMMORTAL).amount < 3):
@@ -61,7 +61,7 @@ class LeaderBot(sc2.BotAI):
                         await self.do(forge(AbilityId.FORGERESEARCH_PROTOSSSHIELDSLEVEL1))
 
                 if(self.units(OBSERVER).exists):
-                    await self.getAgent("Scouter").scoutObserver()#scout com observadores
+                    await self.agents['Scouter'].scoutObserver()#scout com observadores
 
                 if self.units(CYBERNETICSCORE).ready.exists: #melhoria em armas e armaduras de unidades aéreas
                     cybercore = self.units(CYBERNETICSCORE).first
@@ -73,8 +73,11 @@ class LeaderBot(sc2.BotAI):
                         print("Melhoramento em armadura de unidades aéreas")
                         await self.do(cybercore(AbilityId.CYBERNETICSCORERESEARCH_PROTOSSAIRARMORLEVEL1))
 
-                for (_,agent) in self.agents:
-                    await agent.on_step(iteration)
+                if self.units(PYLON).amount % 3 == 0:
+                    await self.agents['Builder'].buildPylon(nexus)
+
+                for agent in self.agents:
+                    await self.agents[agent].on_step(iteration)
                 
             else:
                 print("Without nexus")       
