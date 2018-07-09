@@ -17,7 +17,7 @@ class BuilderAgent(object):
             self.update_new_nexus_ready()
             
             for nexus_index in self.nexus_levels:
-                if self.bot.units(NEXUS).amount > nexus_index[0]:
+                if self.bot.units(NEXUS).ready.amount > nexus_index[0]:
                     nexus = self.bot.units(NEXUS)[nexus_index[0]]
                     
                     if nexus_index[1] == 1:
@@ -25,13 +25,14 @@ class BuilderAgent(object):
                     elif nexus_index[1] == 2:
                         await self.expandBase(nexus)
 
-                else:
-                    print("You need to fix indexes")
+                else: # Fix indexes
+                    self.nexus_levels = [(i,1) for i in range(len(self.bot.units(NEXUS).ready.amount))]
+
 
 
     async def buildAssimilators(self, nexus):
-        if self.bot.units(ASSIMILATOR).closer_than(10, nexus).amount < 2 and not self.bot.already_pending(ASSIMILATOR):
-            for vespeno_gas in self.bot.state.vespene_geyser.closer_than(20.0, nexus):
+        if self.bot.units(ASSIMILATOR).closer_than(12, nexus).amount < 2 and not self.bot.already_pending(ASSIMILATOR):
+            for vespeno_gas in self.bot.state.vespene_geyser.closer_than(10.0, nexus):
                 if self.bot.can_afford(ASSIMILATOR):
                     proble = self.bot.units(PROBE).closest_to(vespeno_gas)
                     print("Build ASSIMILATOR")
@@ -45,7 +46,7 @@ class BuilderAgent(object):
                 await self.bot.build(building, near=pos)
     
     async def build_structure(self, building, pos, n):
-        if ((self.bot.units(building).amount < n) and (self.bot.already_pending(building) == False)):
+        if ((self.bot.units(building).closer_than(15, pos).amount < n) and (self.bot.already_pending(building) == False)):
             if self.bot.can_afford(building):
                 print("Build", building)
                 await self.bot.build(building, near=pos)
@@ -58,13 +59,17 @@ class BuilderAgent(object):
             pylon = self.bot.units(PYLON).closer_than(5, pos).first
           
             await self.buildIfNotExist(GATEWAY, pylon)
-            await self.buildAssimilators(nexus)
+            
+            if self.bot.units(ASSIMILATOR).closer_than(10, nexus).amount < 2:
+                await self.buildAssimilators(nexus)
         
-        if (self.bot.units(PYLON).closer_than(5, pos).ready.exists and self.bot.units(GATEWAY).ready.exists):
+        if (self.bot.units(PYLON).closer_than(5, pos).ready.exists and self.bot.units(GATEWAY).closer_than(5, pos).ready.exists):
             pylon = self.bot.units(PYLON).closer_than(5, pos).first
 
             await self.buildIfNotExist(CYBERNETICSCORE, pylon)
-            nexus_index = (nexus_index[0], 2)
+        
+        if (self.bot.units(CYBERNETICSCORE).closer_than(12, pos).ready.exists):
+            self.nexus_levels[nexus_index[0]] = (nexus_index[0], 2)
 
     async def buildPhotonCannon(self, nexus):
         if not self.bot.units(PHOTONCANNON).exists and self.bot.can_afford(PHOTONCANNON):
@@ -82,8 +87,8 @@ class BuilderAgent(object):
 
         await self.buildPylon(nexus)
 
-        if self.bot.units(PYLON).amount >= 2:
-            pylon = self.bot.units(PYLON)[1]
+        if self.bot.units(PYLON).closer_than(10, nexus).amount >= 2:
+            pylon = self.bot.units(PYLON).closer_than(10, nexus)[1]
             await self.build_structure(GATEWAY, pylon, 2)
 
         if self.bot.units(CYBERNETICSCORE).ready.exists:
@@ -112,9 +117,9 @@ class BuilderAgent(object):
         #    await self.createSimpleUnits(self.bot.units(NEXUS)[1])
 
     def update_new_nexus_ready(self):
-        if self.building_nexus == True and len(self.nexus_levels) > self.bot.units(NEXUS).ready.amount:
+        if self.building_nexus == True and len(self.nexus_levels) < self.bot.units(NEXUS).ready.amount:
             self.building_nexus = False
-            self.nexus_levels = self.nexus_levels + (len(self.nexus_levels), 1)
+            self.nexus_levels.append((len(self.nexus_levels), 1))
 
     def removeMinerals(self, minerals_next_nexus, minerals):
         return [mineral for mineral in minerals if mineral not in minerals_next_nexus]

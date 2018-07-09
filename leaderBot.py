@@ -21,6 +21,8 @@ class LeaderBot(sc2.BotAI):
             print("First action")
             self.agents = {'Builder' : BuilderAgent(self), 'Collector' : CollectorAgent(self), 'Scouter' : ScouterBot(self), 'Fighter' : FighterAgent(self) }
         else:
+            await self.read_messages()
+            
             if self.units(NEXUS).exists:
                 for nexus in self.units(NEXUS).ready:
                     await self.verify_attack(nexus)
@@ -38,7 +40,7 @@ class LeaderBot(sc2.BotAI):
                 if (len(self.agents['Fighter'].getFighters()) >= 25):
                     await self.agents['Fighter'].attack()
 
-                if (self.units(ROBOTICSFACILITY).ready.exists and self.units(IMMORTAL).amount < 3):
+                if (self.units(ROBOTICSFACILITY).ready.exists): ##  and self.units(IMMORTAL).amount < 3
                     roboticsfacility = self.units(ROBOTICSFACILITY)[0]
                     if self.can_afford(IMMORTAL) and roboticsfacility.noqueue:
                         await self.do(roboticsfacility.train(IMMORTAL)) 
@@ -62,21 +64,34 @@ class LeaderBot(sc2.BotAI):
             
 
     async def createArmy(self, gateway):
-        if self.units(ZEALOT).amount < 5 and gateway.noqueue:
-            if self.can_afford(ZEALOT):
-                await self.do(gateway.train(ZEALOT)) 
-        elif self.units(SENTRY).amount < 5 and gateway.noqueue:
-            if self.can_afford(SENTRY):
-                await self.do(gateway.train(SENTRY))
-        ##elif self.units(STALKER).amount < 6 and gateway.noqueue:
-        elif gateway.noqueue:
-            if self.can_afford(STALKER):
-                await self.do(gateway.train(STALKER))
-                                
-        if 'Fighter' not in self.agents:
-            self.agents['Fighter'] = FighterAgent(self)
+        if gateway.noqueue:
+            if self.units(ZEALOT).amount < 5 or not self.units(CYBERNETICSCORE).ready.exists:
+                if self.can_afford(ZEALOT):
+                    await self.do(gateway.train(ZEALOT)) 
+            elif self.units(SENTRY).amount < 5:
+                if self.can_afford(SENTRY):
+                    await self.do(gateway.train(SENTRY))
+            ##elif self.units(STALKER).amount < 6 and gateway.noqueue:
+            else:
+                if self.can_afford(STALKER):
+                    await self.do(gateway.train(STALKER))
 
     async def verify_attack(self, nexus):
         enemies = self.known_enemy_units.closer_than(20.0, nexus)
         if (enemies.exists and enemies.amount > 1):
             await self.agents['Fighter'].defend(nexus, enemies)
+
+    async def read_messages(self):
+        for message in self.messagesQueue:
+            if (message[0] == 'Fighter'):
+                fighters = self.agents['Fighter'].getFighters()
+                
+                fighters_idle = []
+                for f in fighters:
+                    if f.is_idle:
+                        fighters_idle.append(f)
+                
+                if len(fighters_idle) >= 5:
+                    await self.agents['Fighter'].attack()
+
+        self.messagesQueue = []
