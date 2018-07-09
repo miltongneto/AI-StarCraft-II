@@ -20,30 +20,25 @@ class LeaderBot(sc2.BotAI):
     async def on_step(self, iteration):
         if iteration == 0:
             print("First action")
-            self.agents = [('Builder', BuilderAgent(self)), ('Collector', CollectorAgent(self))]
+            self.agents = {'Builder' : BuilderAgent(self), 'Collector' : CollectorAgent(self), 'Scouter' : ScouterBot(self), 'Fighter' : FighterAgent(self) }
         else:
             if self.units(NEXUS).exists:
-                nexus = self.units(NEXUS).first
-                
-                await self.trainProbe(nexus)
-
-                scouters = self.getAgent('Scouter')
-                if scouters == None:
-                    self.agents.append(('Scouter', ScouterBot(self)))
+                for nexus in self.units(NEXUS).ready:
+                    await self.verify_attack(nexus)
+                    await self.trainProbe(nexus)
                 
                 if (self.supply_used > 10):
-                    await self.getAgent('Builder').newNexusAndBase()
+                    await self.agents['Builder'].newNexusAndBase()
+                    await self.agents['Scouter'].scouting()
+
 
                 if (self.units(GATEWAY).ready.exists):
                     for gateway in self.units(GATEWAY).ready:
                         await self.createArmy(gateway)
                     await self.getAgent('Scouter').scouting()    
 
-               # if nexus.shield < 800:
-                #    await self.getAgent('Fighter').defendBase(nexus)
-
-                if (self.supply_used > 32 and len(self.getAgent('Fighter').getFighters()) >= 12):
-                    await self.getAgent('Fighter').attack()
+                if (len(self.agents['Fighter'].getFighters()) >= 25):
+                    await self.agents['Fighter'].attack()
 
                 if (self.units(ROBOTICSFACILITY).ready.exists and self.units(IMMORTAL).amount < 3):
                     roboticsfacility = self.units(ROBOTICSFACILITY)[0]
@@ -88,7 +83,7 @@ class LeaderBot(sc2.BotAI):
     async def trainProbe(self, nexus):
         if not self.can_afford(PROBE):
             return
-        if self.workers.amount < 16 and nexus.noqueue:
+        if self.workers.amount < (16 * self.units(NEXUS).ready.amount) and nexus.noqueue:
             print("Training PROBE")
             await self.do(nexus.train(PROBE))
         elif self.units(PYLON).amount >= 2 and self.units(PROBE).amount < 22 and nexus.noqueue:
@@ -100,10 +95,10 @@ class LeaderBot(sc2.BotAI):
         if self.units(ZEALOT).amount < 5 and len(gateway.orders)<2:
             if self.can_afford(ZEALOT):
                 await self.do(gateway.train(ZEALOT)) 
-        elif self.units(SENTRY).amount < 4 and len(gateway.orders)<2 and self.units(ROBOTICSFACILITY).exists:
+        elif self.units(SENTRY).amount < 5 and len(gateway.orders)<2 and self.units(ROBOTICSFACILITY).exists:
             if self.can_afford(SENTRY):
                 await self.do(gateway.train(SENTRY))
-        elif self.units(STALKER).amount < 6 and len(gateway.orders)<2 and self.units(CYBERNETICSCORE).exists:
+        elif gateway.noqueue and self.units(CYBERNETICSCORE).exists:
             if self.can_afford(STALKER):
                 await self.do(gateway.train(STALKER))
         #usando stargate para unidades aéreas
@@ -112,13 +107,10 @@ class LeaderBot(sc2.BotAI):
             if self.can_afford(VOIDRAY) and self.units(VOIDRAY).amount < 3:
                 await self.do(stargate.train(VOIDRAY))
                                 
-        agent = self.getAgent('Fighter')
-        if agent == None:
-            self.agents.append(('Fighter', FighterAgent(self)))
-            
+        if 'Fighter' not in self.agents:
+            self.agents['Fighter'] = FighterAgent(self)
 
-    def getAgent(self, key):
-        for (k, v) in self.agents:
-            if key == k:
-                return v
-        return None
+    async def verify_attack(self, nexus):
+        enemies = self.known_enemy_units.closer_than(20.0, nexus)
+        if (enemies.exists and enemies.amount > 1):
+            await self.agents['Fighter'].defend(nexus, enemies)

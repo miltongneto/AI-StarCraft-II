@@ -45,5 +45,16 @@ class FighterAgent(object):
         self.addUnits(units, self.coordinator.units(SENTRY))
         self.addUnits(units, self.coordinator.units(STALKER))
         self.addUnits(units, self.coordinator.units(IMMORTAL))
+<<<<<<< HEAD
         self.addUnits(units, self.coordinator.units(VOIDRAY))
         return units
+=======
+        return units
+
+    async def defend(self, nexus, enemies):
+        fighters = self.getFighters()
+        
+        for fighter in fighters:
+            if fighter.position.to2.distance_to(nexus) < 50:
+                await self.coordinator.do(fighter.attack(enemies.closest_to(fighter))) 
+>>>>>>> cb853e9a856b7fefb5fb2d5a83aebdcc3d334cad
